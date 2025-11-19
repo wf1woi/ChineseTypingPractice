@@ -10,7 +10,9 @@
 中文打字练习界面：
 ![中文打字练习界面](./images/image.png)
 
-## 新手使用指南（小白必看）
+访问以下链接即可开始使用：[wf1woi.github.io/ChineseTypingPractice/](https://wf1woi.github.io/ChineseTypingPractice/)
+
+## 新手本地使用指南（小白必看）
 
 ### 第一步：保存练习程序
 
