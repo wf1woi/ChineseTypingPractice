@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中文打字练习</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            user-select: none;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .practice-area {
+            margin-bottom: 30px;
+        }
+
+        .display-area {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 完成提示 */
+        .complete-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 14px;
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 5px 15px;
+            border-radius: 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        /* 拼音音调显示 */
+        .pinyin-with-tone {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .pinyin-line {
+            font-size: 32px;
+            color: #666;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pinyin-char {
+            padding: 2px 4px;
+            margin: 0 1px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .pinyin-char.completed {
+            background: #4CAF50;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .pinyin-char.error {
+            background: #f44336;
+            color: white;
+            animation: shake 0.5s;
+        }
+
+        .pinyin-char.current {
+            background: #2196F3;
+            color: white;
+            animation: blink 1s infinite;
+        }
+
+        .pinyin-char.skipped {
+            background: #ff9800;
+            color: white;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.6; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chinese-line {
+            font-size: 48px;
+            color: #333;
+            font-weight: bold;
+            letter-spacing: 10px;
+        }
+
+        /* 句子练习样式 */
+        .sentence-display {
+            font-size: 28px;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: left;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .sentence-char {
+            transition: all 0.2s;
+            display: inline;
+        }
+
+        .sentence-char.completed {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .sentence-char.error {
+            color: #f44336;
+            background: #ffebee;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .sentence-char.current {
+            background: #e3f2fd;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .sentence-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .sentence-input:focus {
+            border-color: #4CAF50;
+        }
+
+        /* 资源选择器 */
+        .resource-selector {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .resource-selector select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .resource-selector button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #ff9800;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+
+        .resource-selector button:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: inline-block;
+            margin-left: 10px;
+            color: #666;
+        }
+
+        .keyboard-wrapper {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .keyboard {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .keyboard-row:nth-child(2) {
+            padding-left: 20px;
+        }
+
+        .keyboard-row:nth-child(3) {
+            padding-left: 40px;
+        }
+
+        .key {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 12px;
+            min-width: 45px;
+            height: 45px;
+            text-align: center;
+            font-size: 16px;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s;
+            font-weight: 500;
+            margin: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .key.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .key.error-key {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .key.next-key {
+            animation: keyBlink 1s infinite;
+            border-color: #2196F3;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+        }
+
+        @keyframes keyBlink {
+            0%, 50% { 
+                background: #e3f2fd;
+                transform: scale(1.05);
+            }
+            51%, 100% { 
+                background: white;
+                transform: scale(1);
+            }
+        }
+
+        .key.space {
+            min-width: 300px;
+        }
+
+        .key.enter {
+            min-width: 90px;
+            background: #e3f2fd;
+        }
+
+        .key.enter.highlight {
+            animation: enterHighlight 1s infinite;
+        }
+
+        @keyframes enterHighlight {
+            0%, 50% { background: #e3f2fd; }
+            51%, 100% { background: #bbdefb; }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            margin: 20px 0;
+            min-height: 30px;
+        }
+
+        .message.success {
+            color: #4CAF50;
+        }
+
+        .message.error {
+            color: #f44336;
+        }
+
+        .message.info {
+            color: #2196F3;
+        }
+
+        .message.warning {
+            color: #ff9800;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .phase-indicator.active {
+            color: #4CAF50;
+            font-size: 18px;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s;
+        }
+
+        .modal-content h2 {
+            font-size: 32px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .final-stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .final-stat-label {
+            color: #666;
+        }
+
+        .final-stat-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .grade {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .grade.S { color: #ff9800; }
+        .grade.A { color: #4CAF50; }
+        .grade.B { color: #2196F3; }
+        .grade.C { color: #9c27b0; }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .btn-close {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-close:hover {
+            background: #45a049;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .current-category {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .file-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 3px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.6/dist/index.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">中文打字练习</h1>
+        
+        <!-- 资源选择器 -->
+        <div class="resource-selector">
+            <select id="resourceType" onchange="autoLoadResources()">
+                <option value="default">默认词库</option>
+            </select>
+            <button class="btn-file" onclick="document.getElementById('fileInput').click()">加载文件</button>
+            <input type="file" id="fileInput" accept=".json,.txt" onchange="loadFile(event)">
+            <span class="loading hidden" id="loadingIndicator">加载中...</span>
+            <div class="current-category" id="currentCategory"></div>
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+        
+        <div class="practice-area">
+            <div class="phase-indicator" id="phaseIndicator">第一阶段：拼音练习</div>
+            
+            <div class="display-area">
+                <div id="pinyinPractice">
+                    <div class="pinyin-with-tone" id="pinyinWithTone">yán xià</div>
+                    <div class="pinyin-line" id="pinyinLine"></div>
+                    <div class="chinese-line" id="chineseLine">炎夏</div>
+                    <div class="complete-hint">按 Enter 键提交</div>
+                </div>
+                
+                <div id="sentencePractice" class="hidden">
+                    <div class="sentence-display" id="sentenceDisplay"></div>
+                    <input type="text" class="sentence-input" id="sentenceInput" placeholder="请输入上面的句子..." autocomplete="off">
+                    <div class="complete-hint">按 Enter 键提交</div>
+                </div>
+            </div>
+
+            <div class="message" id="message">点击"开始练习"，随时按 Enter 键提交</div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <div class="keyboard-wrapper" id="keyboardWrapper">
+                <div class="keyboard">
+                    <div class="keyboard-row">
+                        <div class="key" data-key="`">~<br>`</div>
+                        <div class="key" data-key="1">!<br>1</div>
+                        <div class="key" data-key="2">@<br>2</div>
+                        <div class="key" data-key="3">#<br>3</div>
+                        <div class="key" data-key="4">$<br>4</div>
+                        <div class="key" data-key="5">%<br>5</div>
+                        <div class="key" data-key="6">^<br>6</div>
+                        <div class="key" data-key="7">&<br>7</div>
+                        <div class="key" data-key="8">*<br>8</div>
+                        <div class="key" data-key="9">(<br>9</div>
+                        <div class="key" data-key="0">)<br>0</div>
+                        <div class="key" data-key="-">_<br>-</div>
+                        <div class="key" data-key="=">+<br>=</div>
+                        <div class="key" data-key="backspace">←</div>
+                    </div>
+                    <div class="keyboard-row">
+                        <div class="key" data-key="tab">Tab</div>
+                        <div class="key" data-key="q">Q</div>
+                        <div class="key" data-key="w">W</div>
+                        <div class="key" data-key="e">E</div>
+                        <div class="key" data-key="r">R</div>
+                        <div class="key" data-key="t">T</div>
+                        <div class="key" data-key="y">Y</div>
+                        <div class="key" data-key="u">U</div>
+                        <div class="key" data-key="i">I</div>
+                        <div class="key" data-key="o">O</div>
+                        <div class="key" data-key="p">P</div>
+                        <div class="key" data-key="[">{<br>[</div>
+                        <div class="key" data-key="]">}<br>]</div>
+                        <div class="key" data-key="\">|<br>\</div>
+                    </div>
+                    <div class="keyboard-row">
+                        <div class="key" data-key="capslock">Caps</div>
+                        <div class="key" data-key="a">A</div>
+                        <div class="key" data-key="s">S</div>
+                        <div class="key" data-key="d">D</div>
+                        <div class="key" data-key="f">F</div>
+                        <div class="key" data-key="g">G</div>
+                        <div class="key" data-key="h">H</div>
+                        <div class="key" data-key="j">J</div>
+                        <div class="key" data-key="k">K</div>
+                        <div class="key" data-key="l">L</div>
+                        <div class="key" data-key=";">:<br>;</div>
+                        <div class="key" data-key="'">"<br>'</div>
+                        <div class="key enter" data-key="enter">Enter</div>
+                    </div>
+                    <div class="keyboard-row">
+                        <div class="key" data-key="shift">Shift</div>
+                        <div class="key" data-key="z">Z</div>
+                        <div class="key" data-key="x">X</div>
+                        <div class="key" data-key="c">C</div>
+                        <div class="key" data-key="v">V</div>
+                        <div class="key" data-key="b">B</div>
+                        <div class="key" data-key="n">N</div>
+                        <div class="key" data-key="m">M</div>
+                        <div class="key" data-key=",">&lt;<br>,</div>
+                        <div class="key" data-key=".">&gt;<br>.</div>
+                        <div class="key" data-key="/">?<br>/</div>
+                        <div class="key" data-key="shift">Shift</div>
+                    </div>
+                    <div class="keyboard-row">
+                        <div class="key space" data-key=" ">Space</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">速度/分钟</div>
+                    <div class="stat-value" id="speedStat">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">准确率</div>
+                    <div class="stat-value" id="accuracyStat">100%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">完成进度</div>
+                    <div class="stat-value" id="progressStat">0/10</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="startBtn" onclick="startPractice()">开始练习</button>
+            <button class="btn btn-secondary" onclick="resetPractice()">重置</button>
+        </div>
+    </div>
+
+    <!-- 完成弹窗 -->
+    <div class="modal" id="completeModal">
+        <div class="modal-content">
+            <h2>🎉 恭喜完成！</h2>
+            <div class="grade" id="grade">A</div>
+            <div class="final-stats">
+                <div class="final-stat-item">
+                    <span class="final-stat-label">总用时</span>
+                    <span class="final-stat-value" id="finalTime">0秒</span>
+                </div>
+                <div class="final-stat-item">
+                    <span class="final-stat-label">平均速度</span>
+                    <span class="final-stat-value" id="finalSpeed">0 字/分钟</span>
+                </div>
+                <div class="final-stat-item">
+                    <span class="final-stat-label">准确率</span>
+                    <span class="final-stat-value" id="finalAccuracy">100%</span>
+                </div>
+                <div class="final-stat-item">
+                    <span class="final-stat-label">错误次数</span>
+                    <span class="final-stat-value" id="finalErrors">0</span>
+                </div>
+                <div class="final-stat-item">
+                    <span class="final-stat-label">未完成提交</span>
+                    <span class="final-stat-value" id="finalSkipped">0</span>
+                </div>
+            </div>
+            <button class="btn-close" onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // 中文资源数据
+        let chineseResources = null;
+        
+        // 默认练习词库
+        let practiceWords = [];
+        let practiceSentences = [];
+        let currentCategoryName = '默认词库';
+
+        // 状态变量
+        let currentPhase = 'pinyin';
+        let currentWordIndex = 0;
+        let currentSentenceIndex = 0;
+        let currentCharIndex = 0;
+        let startTime = null;
+        let phaseStartTime = null;
+        let correctChars = 0;
+        let totalChars = 0;
+        let errorCount = 0;
+        let isActive = false;
+        let completedItems = 0;
+        let skippedCount = 0;
+        let currentNextKey = null;
+
+        // DOM元素
+        const pinyinLine = document.getElementById('pinyinLine');
+        const pinyinWithTone = document.getElementById('pinyinWithTone');
+        const chineseLine = document.getElementById('chineseLine');
+        const message = document.getElementById('message');
+        const progressBar = document.getElementById('progressBar');
+        const speedStat = document.getElementById('speedStat');
+        const accuracyStat = document.getElementById('accuracyStat');
+        const progressStat = document.getElementById('progressStat');
+        const startBtn = document.getElementById('startBtn');
+        const phaseIndicator = document.getElementById('phaseIndicator');
+        const pinyinPractice = document.getElementById('pinyinPractice');
+        const sentencePractice = document.getElementById('sentencePractice');
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const sentenceInput = document.getElementById('sentenceInput');
+        const keyboardWrapper = document.getElementById('keyboardWrapper');
+        const completeModal = document.getElementById('completeModal');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const currentCategory = document.getElementById('currentCategory');
+        const fileInfo = document.getElementById('fileInfo');
+
+        // 初始化默认分类
+        function initDefaultCategories() {
+            const select = document.getElementById('resourceType');
+            select.innerHTML = '<option value="default">默认词库</option>';
+        }
+
+        // 添加分类选项
+        function addCategoryOption(value, text) {
+            const select = document.getElementById('resourceType');
+            // 检查是否已存在
+            const exists = Array.from(select.options).some(option => option.value === value);
+            if (!exists) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = text;
+                select.appendChild(option);
+            }
+        }
+
+        // 加载资源文件（初始化）
+        async function loadResourceFile() {
+            // 初始化默认选项
+            initDefaultCategories();
+            // 使用默认数据
+            setDefaultData();
+        }
+
+        // 设置默认数据
+        function setDefaultData() {
+            practiceWords = [
+                { chinese: '炎夏', pinyin: 'yanxia', pinyinTone: 'yán xià' },
+                { chinese: '春天', pinyin: 'chuntian', pinyinTone: 'chūn tiān' },
+                { chinese: '学习', pinyin: 'xuexi', pinyinTone: 'xué xí' },
+                { chinese: '电脑', pinyin: 'diannao', pinyinTone: 'diàn nǎo' },
+                { chinese: '朋友', pinyin: 'pengyou', pinyinTone: 'péng yǒu' }
+            ];
+            practiceSentences = [
+                '春天的花朵非常美丽。',
+                '我喜欢和朋友一起学习。',
+                '电脑是现代生活的工具。'
+            ];
+            currentCategoryName = '默认词库';
+            updateCategoryDisplay();
+        }
+
+        // 加载指定类别的数据
+        function loadCategoryData(category) {
+            if (!chineseResources || !chineseResources.categories[category]) {
+                return;
+            }
+
+            const categoryData = chineseResources.categories[category];
+            currentCategoryName = categoryData.name;
+            
+            // 处理词汇，生成拼音
+            practiceWords = categoryData.words.slice(0, 10).map(word => {
+                const pinyinTone = pinyinPro.pinyin(word, { toneType: 'symbol', type: 'array' }).join(' ');
+                const pinyinNoTone = pinyinPro.pinyin(word, { toneType: 'none', type: 'array' }).join('');
+                
+                return {
+                    chinese: word,
+                    pinyin: pinyinNoTone.toLowerCase(),
+                    pinyinTone: pinyinTone
+                };
+            });
+
+            // 使用句子
+            practiceSentences = categoryData.sentences.slice(0, 5);
+            updateCategoryDisplay();
+        }
+
+        // 更新分类显示
+        function updateCategoryDisplay() {
+            currentCategory.textContent = `当前分类：${currentCategoryName}`;
+            fileInfo.textContent = '';
+        }
+
+        // 自动加载资源
+        function autoLoadResources() {
+            const resourceType = document.getElementById('resourceType').value;
+            
+            if (resourceType === 'default') {
+                setDefaultData();
+                resetPractice();
+                message.textContent = '已加载默认词库';
+                message.className = 'message success';
+            } else if (chineseResources && chineseResources.categories[resourceType]) {
+                loadCategoryData(resourceType);
+                resetPractice();
+                message.textContent = `已加载${currentCategoryName}`;
+                message.className = 'message success';
+            }
+        }
+
+        // 加载文件 - 自动识别文件类型
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const fileName = file.name.toLowerCase();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    
+                    if (fileName.endsWith('.json')) {
+                        // 处理JSON文件
+                        handleJsonFile(content, file.name);
+                    } else if (fileName.endsWith('.txt')) {
+                        // 处理TXT文件
+                        handleTxtFile(content, file.name);
+                    } else {
+                        throw new Error('不支持的文件格式');
+                    }
+                    
+                    resetPractice();
+                    message.textContent = '文件加载成功！';
+                    message.className = 'message success';
+                } catch (error) {
+                    console.error('文件处理错误:', error);
+                    message.textContent = '文件格式错误：' + error.message;
+                    message.className = 'message error';
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 处理JSON文件
+        function handleJsonFile(content, fileName) {
+            const data = JSON.parse(content);
+            
+            // 检查是否为完整的资源文件格式
+            if (data.categories) {
+                // 完整的资源文件
+                if (!chineseResources) chineseResources = { categories: {} };
+                
+                // 添加到选择栏
+                Object.entries(data.categories).forEach(([key, value]) => {
+                    addCategoryOption(key, value.name);
+                });
+                
+                // 保存资源数据
+                Object.assign(chineseResources.categories, data.categories);
+                
+                // 选择第一个类别
+                const firstCategory = Object.keys(data.categories)[0];
+                if (firstCategory) {
+                    loadCategoryData(firstCategory);
+                    document.getElementById('resourceType').value = firstCategory;
+                }
+                
+                fileInfo.textContent = `已加载: ${fileName} (${Object.keys(data.categories).length}个分类)`;
+            } else if (data.words && data.sentences) {
+                // 简单格式的JSON文件
+                const categoryKey = fileName.replace('.json', '').replace(/\s+/g, '_');
+                const categoryName = fileName.replace('.json', '');
+                
+                // 添加到选择栏
+                addCategoryOption(categoryKey, categoryName);
+                
+                // 保存数据
+                if (!chineseResources) chineseResources = { categories: {} };
+                chineseResources.categories[categoryKey] = {
+                    name: categoryName,
+                    words: data.words,
+                    sentences: data.sentences
+                };
+                
+                // 选择这个分类
+                document.getElementById('resourceType').value = categoryKey;
+                loadCategoryData(categoryKey);
+                
+                fileInfo.textContent = `已加载: ${fileName} (${data.words.length}个词, ${data.sentences.length}个句子)`;
+            } else {
+                throw new Error('JSON文件格式不正确');
+            }
+        }
+
+        // 处理TXT文件
+        function handleTxtFile(content, fileName) {
+            // 使用文件名作为分类名
+            const categoryKey = fileName.replace('.txt', '').replace(/\s+/g, '_');
+            const categoryName = fileName.replace('.txt', '');
+            
+            const lines = content.split(/[\n\r]+/).filter(line => line.trim());
+            const words = [];
+            const sentences = [];
+            
+            // 中文句子结束符号
+            const sentenceEndings = ['。', '！', '？', '；', '…'];
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                
+                // 检查是否为句子
+                const isSentence = sentenceEndings.some(ending => line.includes(ending)) || 
+                                 line.length > 15 || // 长度超过15个字符可能是句子
+                                 /[，、]/.test(line); // 包含逗号或顿号可能是句子
+                
+                if (isSentence) {
+                    // 如果没有句号，自动添加
+                    if (!sentenceEndings.some(ending => line.endsWith(ending))) {
+                        line += '。';
+                    }
+                    sentences.push(line);
+                } else if (line.length <= 10) {
+                    // 短文本作为词汇
+                    words.push(line);
+                }
+            });
+            
+            // 如果没有识别到词汇，将短句子也作为词汇
+            if (words.length === 0 && sentences.length > 0) {
+                sentences.forEach(sentence => {
+                    // 按标点符号分割句子
+                    const parts = sentence.split(/[，。！？；、]+/).filter(part => part.trim());
+                    parts.forEach(part => {
+                        if (part.length <= 8 && part.length > 0) {
+                            words.push(part);
+                        }
+                    });
+                });
+            }
+            
+            // 添加到选择栏
+            addCategoryOption(categoryKey, categoryName);
+            
+            // 保存到资源中
+            if (!chineseResources) chineseResources = { categories: {} };
+            chineseResources.categories[categoryKey] = {
+                name: categoryName,
+                words: words,
+                sentences: sentences
+            };
+            
+            // 选择这个分类
+            document.getElementById('resourceType').value = categoryKey;
+            
+            // 生成拼音并加载
+            currentCategoryName = categoryName;
+            practiceWords = words.slice(0, 20).map(word => {
+                const pinyinTone = pinyinPro.pinyin(word, { toneType: 'symbol', type: 'array' }).join(' ');
+                const pinyinNoTone = pinyinPro.pinyin(word, { toneType: 'none', type: 'array' }).join('');
+                
+                return {
+                    chinese: word,
+                    pinyin: pinyinNoTone.toLowerCase(),
+                    pinyinTone: pinyinTone
+                };
+            });
+            
+            practiceSentences = sentences.slice(0, 10);
+            updateCategoryDisplay();
+            fileInfo.textContent = `已加载: ${fileName} (${practiceWords.length}个词, ${practiceSentences.length}个句子)`;
+        }
+
+        // 更新下一个按键提示
+        function updateNextKeyHint() {
+            // 清除之前的提示
+            if (currentNextKey) {
+                const prevKey = document.querySelector(`[data-key="${currentNextKey}"]`);
+                if (prevKey) {
+                    prevKey.classList.remove('next-key');
+                }
+            }
+
+            if (currentPhase === 'pinyin' && isActive) {
+                const currentWord = practiceWords[currentWordIndex];
+                if (currentCharIndex < currentWord.pinyin.length) {
+                    const nextChar = currentWord.pinyin[currentCharIndex];
+                    const keyElement = document.querySelector(`[data-key="${nextChar}"]`);
+                    if (keyElement) {
+                        keyElement.classList.add('next-key');
+                        currentNextKey = nextChar;
+                    }
+                }
+            }
+        }
+
+        // 初始化拼音显示
+        function initPinyinDisplay() {
+            const currentWord = practiceWords[currentWordIndex];
+            chineseLine.textContent = currentWord.chinese;
+            pinyinWithTone.textContent = currentWord.pinyinTone;
+            
+            pinyinLine.innerHTML = '';
+            currentWord.pinyin.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.className = 'pinyin-char';
+                span.textContent = char;
+                if (index === 0) span.classList.add('current');
+                pinyinLine.appendChild(span);
+            });
+            
+            updateNextKeyHint();
+        }
+
+        // 初始化句子显示
+        function initSentenceDisplay() {
+            const currentSentence = practiceSentences[currentSentenceIndex];
+            sentenceDisplay.innerHTML = '';
+            
+            currentSentence.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.className = 'sentence-char';
+                span.textContent = char;
+                if (index === 0) span.classList.add('current');
+                sentenceDisplay.appendChild(span);
+            });
+            
+            sentenceInput.value = '';
+            sentenceInput.focus();
+        }
+
+        // 键盘事件监听（拼音练习）
+        document.addEventListener('keydown', (e) => {
+            if (!isActive || currentPhase !== 'pinyin') return;
+
+            const key = e.key.toLowerCase();
+            
+            // 处理Enter键 - 随时可以提交
+            if (key === 'enter') {
+                e.preventDefault();
+                submitCurrentWord();
+                return;
+            }
+            
+            if (key === 'backspace' || key === 'escape') {
+                e.preventDefault();
+                return;
+            }
+
+            if (!/^[a-z]$/.test(key)) return;
+
+            e.preventDefault();
+
+            // 显示按键反馈
+            const keyElement = document.querySelector(`[data-key="${key}"]`);
+            if (keyElement) {
+                keyElement.classList.add('active');
+                setTimeout(() => keyElement.classList.remove('active'), 100);
+            }
+
+            handlePinyinInput(key);
+        });
+
+        // 提交当前词组
+        function submitCurrentWord() {
+            const currentWord = practiceWords[currentWordIndex];
+            const pinyinChars = pinyinLine.children;
+            
+            // 检查是否完成
+            const isComplete = currentCharIndex >= currentWord.pinyin.length;
+            
+            if (!isComplete) {
+                // 未完成提交
+                skippedCount++;
+                
+                // 将未输入的字符统计到总字符数中，但不计入正确字符
+                for (let i = currentCharIndex; i < currentWord.pinyin.length; i++) {
+                    pinyinChars[i].classList.add('skipped');
+                    totalChars++; // 增加总字符数
+                    // 不增加 correctChars，这样会降低准确率
+                }
+                
+                message.textContent = '未完成提交！继续下一个...';
+                message.className = 'message warning';
+            } else {
+                message.textContent = '完成！继续下一个...';
+                message.className = 'message success';
+            }
+            
+            completedItems++;
+            
+            // 更新统计
+            updateStats();
+            
+            // 等待一下让用户看到结果
+            setTimeout(() => {
+                nextPinyinWord();
+            }, 500);
+        }
+
+        // 处理拼音输入
+        function handlePinyinInput(key) {
+            const currentWord = practiceWords[currentWordIndex];
+            const targetChar = currentWord.pinyin[currentCharIndex];
+            const pinyinChars = pinyinLine.children;
+        
+            totalChars++;
+        
+            if (key === targetChar) {
+                correctChars++;
+                pinyinChars[currentCharIndex].classList.remove('current', 'error');
+                pinyinChars[currentCharIndex].classList.add('completed');
+                
+                currentCharIndex++;
+        
+                if (currentCharIndex < currentWord.pinyin.length) {
+                    pinyinChars[currentCharIndex].classList.add('current');
+                    updateNextKeyHint();
+                } else {
+                    // 词组输入完成
+                    document.querySelector('[data-key="enter"]').classList.add('highlight');
+                    message.textContent = '输入完成！按 Enter 键继续';
+                    message.className = 'message info';
+                    updateNextKeyHint();
+                }
+            } else {
+                // 错误输入不增加 correctChars
+                // totalChars 已经增加了，所以准确率会自动降低
+                pinyinChars[currentCharIndex].classList.add('error');
+                
+                const keyElement = document.querySelector(`[data-key="${key}"]`);
+                if (keyElement) {
+                    keyElement.classList.add('error-key');
+                    setTimeout(() => keyElement.classList.remove('error-key'), 300);
+                }
+        
+                setTimeout(() => {
+                    pinyinChars[currentCharIndex].classList.remove('error');
+                }, 500);
+            }
+        
+            updateStats();
+        }
+
+        // 句子输入处理
+        sentenceInput.addEventListener('input', (e) => {
+            if (!isActive || currentPhase !== 'sentence') return;
+        
+            const input = e.target.value;
+            const targetSentence = practiceSentences[currentSentenceIndex];
+            const sentenceChars = sentenceDisplay.children;
+        
+            // 清除所有状态
+            Array.from(sentenceChars).forEach(char => {
+                char.classList.remove('completed', 'error', 'current');
+            });
+        
+            // 逐字符验证（只用于显示，不影响统计）
+            for (let i = 0; i < input.length; i++) {
+                if (i < targetSentence.length) {
+                    if (input[i] === targetSentence[i]) {
+                        sentenceChars[i].classList.add('completed');
+                    } else {
+                        sentenceChars[i].classList.add('error');
+                    }
+                }
+            }
+        
+            // 标记当前位置
+            if (input.length < targetSentence.length) {
+                sentenceChars[input.length].classList.add('current');
+            }
+            
+            // 注意：这里不更新统计，统计只在提交时更新
+        });
+
+        // 句子输入Enter键处理
+        sentenceInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitCurrentSentence();
+            }
+        });
+
+        // 提交当前句子
+        function submitCurrentSentence() {
+            const input = sentenceInput.value;
+            const targetSentence = practiceSentences[currentSentenceIndex];
+            
+            // 统计正确和错误的字符
+            let correctCount = 0;
+            let errorCount = 0;
+            
+            // 比较输入和目标句子
+            const maxLength = Math.max(input.length, targetSentence.length);
+            for (let i = 0; i < maxLength; i++) {
+                if (i < input.length && i < targetSentence.length) {
+                    // 两者都有字符的情况
+                    if (input[i] === targetSentence[i]) {
+                        correctCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } else {
+                    // 长度不匹配的部分都算错误
+                    errorCount++;
+                }
+            }
+            
+            // 更新全局统计
+            correctChars += correctCount;
+            totalChars += maxLength;
+            
+            // 判断是否完全正确
+            const isCorrect = input === targetSentence;
+            
+            if (isCorrect) {
+                message.textContent = '句子正确！';
+                message.className = 'message success';
+            } else {
+                message.textContent = '句子有误！继续下一个...';
+                message.className = 'message warning';
+                skippedCount++;
+            }
+            
+            completedItems++;
+            
+            // 更新统计
+            updateStats();
+            
+            setTimeout(() => {
+                nextSentence();
+            }, 500);
+        }
+
+        // 下一个拼音词组
+        function nextPinyinWord() {
+            currentWordIndex++;
+            document.querySelector('[data-key="enter"]').classList.remove('highlight');
+            
+            if (currentWordIndex >= practiceWords.length) {
+                // 进入句子练习阶段
+                startSentencePractice();
+            } else {
+                currentCharIndex = 0;
+                initPinyinDisplay();
+                message.textContent = '继续输入...';
+                message.className = 'message';
+                updateProgress();
+            }
+        }
+
+        // 开始句子练习
+        function startSentencePractice() {
+            currentPhase = 'sentence';
+            phaseIndicator.textContent = '第二阶段：句子练习';
+            phaseIndicator.className = 'phase-indicator active';
+            
+            // 清除键盘提示
+            if (currentNextKey) {
+                const prevKey = document.querySelector(`[data-key="${currentNextKey}"]`);
+                if (prevKey) {
+                    prevKey.classList.remove('next-key');
+                }
+                currentNextKey = null;
+            }
+            
+            pinyinPractice.classList.add('hidden');
+            sentencePractice.classList.remove('hidden');
+            keyboardWrapper.classList.add('hidden');
+            
+            completedItems = 0;
+            currentSentenceIndex = 0;
+            initSentenceDisplay();
+            
+            message.textContent = '请输入句子，随时按 Enter 键提交';
+            message.className = 'message';
+            
+            updateProgress();
+        }
+
+        // 下一个句子
+        function nextSentence() {
+            currentSentenceIndex++;
+            
+            if (currentSentenceIndex >= practiceSentences.length) {
+                // 练习完成
+                endPractice();
+            } else {
+                initSentenceDisplay();
+                message.textContent = '继续输入下一个句子...';
+                message.className = 'message';
+                updateProgress();
+            }
+        }
+
+        // 开始练习
+        function startPractice() {
+            if (practiceWords.length === 0) {
+                message.textContent = '请先选择或加载练习资源！';
+                message.className = 'message error';
+                return;
+            }
+
+            isActive = true;
+            startTime = Date.now();
+            phaseStartTime = Date.now();
+            startBtn.disabled = true;
+            currentPhase = 'pinyin';
+            
+            message.textContent = '请切换到英文输入法，随时按 Enter 键提交';
+            message.className = 'message';
+            
+            initPinyinDisplay();
+            updateProgress();
+        }
+
+        // 结束练习
+        function endPractice() {
+            isActive = false;
+            const totalSeconds = Math.round((Date.now() - startTime) / 1000);
+            // 速度只计算正确的字符
+            const avgSpeed = Math.round(correctChars / (totalSeconds / 60));
+            const finalAcc = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+            
+            // 计算评级
+            let grade = 'C';
+            if (finalAcc >= 95 && avgSpeed >= 60) grade = 'S';
+            else if (finalAcc >= 90 && avgSpeed >= 40) grade = 'A';
+            else if (finalAcc >= 80 && avgSpeed >= 25) grade = 'B';
+            
+            // 显示结果
+            document.getElementById('finalTime').textContent = `${totalSeconds}秒`;
+            document.getElementById('finalSpeed').textContent = `${avgSpeed} 字/分钟`;
+            document.getElementById('finalAccuracy').textContent = `${finalAcc}%`;
+            document.getElementById('finalErrors').textContent = totalChars - correctChars; // 错误数 = 总数 - 正确数
+            document.getElementById('finalSkipped').textContent = skippedCount;
+            
+            const gradeElement = document.getElementById('grade');
+            gradeElement.textContent = grade;
+            gradeElement.className = `grade ${grade}`;
+            
+            completeModal.classList.add('show');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            completeModal.classList.remove('show');
+            resetPractice();
+        }
+
+        // 重置练习
+        function resetPractice() {
+            // 重置所有状态
+            currentPhase = 'pinyin';
+            currentWordIndex = 0;
+            currentSentenceIndex = 0;
+            currentCharIndex = 0;
+            correctChars = 0;
+            totalChars = 0;
+            errorCount = 0;
+            completedItems = 0;
+            skippedCount = 0;
+            isActive = false;
+            startTime = null;
+            
+            // 清除键盘提示
+            if (currentNextKey) {
+                const prevKey = document.querySelector(`[data-key="${currentNextKey}"]`);
+                if (prevKey) {
+                    prevKey.classList.remove('next-key');
+                }
+                currentNextKey = null;
+            }
+            
+            // 重置UI
+            startBtn.disabled = false;
+            phaseIndicator.textContent = '第一阶段：拼音练习';
+            phaseIndicator.className = 'phase-indicator';
+            
+            pinyinPractice.classList.remove('hidden');
+            sentencePractice.classList.add('hidden');
+            keyboardWrapper.classList.remove('hidden');
+            
+            message.textContent = '点击"开始练习"，随时按 Enter 键提交';
+            message.className = 'message';
+            
+            sentenceInput.value = '';
+            document.querySelector('[data-key="enter"]').classList.remove('highlight');
+            
+            if (practiceWords.length > 0) {
+                initPinyinDisplay();
+            }
+            updateStats();
+            updateProgress();
+        }
+
+        // 更新统计
+        function updateStats() {
+            if (startTime && isActive) {
+                const elapsedMinutes = (Date.now() - startTime) / 60000;
+                const chars = currentPhase === 'pinyin' ? correctChars : correctChars + sentenceInput.value.length;
+                const speed = Math.round(chars / elapsedMinutes);
+                speedStat.textContent = speed;
+            }
+
+            const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+            accuracyStat.textContent = accuracy + '%';
+        }
+
+        // 更新进度
+        function updateProgress() {
+            let total, current;
+            if (currentPhase === 'pinyin') {
+                total = practiceWords.length;
+                current = completedItems;
+                progressStat.textContent = `${current}/${total}`;
+            } else {
+                total = practiceSentences.length;
+                current = completedItems;
+                progressStat.textContent = `${current}/${total}`;
+            }
+            
+            const progress = (current / total) * 100;
+            progressBar.style.width = progress + '%';
+        }
+
+        // 初始化
+        loadResourceFile();
+    </script>
+</body>
+</html>
